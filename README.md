@@ -19,20 +19,26 @@ Using the PICO framework:
 ## Key Findings
 
 ### Main Treatment Effect
-- **Random Forest Model**: -0.0052 (95% CI: [-0.0106, 0.0003], p=0.063)
-- **XGBoost Model**: -0.0045 (95% CI: [-0.0119, 0.0028], p=0.230)
-- **Decision Tree Model**: -0.0092 (95% CI: [-0.0158, -0.0027], p=0.006)*
+- **Random Forest Model**: -0.00105 (95% CI: [-0.0098, 0.0077], p=0.815)
+- **XGBoost Model**: -0.00596 (95% CI: [-0.0150, 0.0031], p=0.196)
+- **Decision Tree Model**: -0.00712 (95% CI: [-0.0173, 0.0030], p=0.169)
+- **Logistic Regression**: -0.00432 (95% CI: [-0.0115, 0.0029], p=0.241)
 
-*Statistically significant at α=0.05 level
+*No statistically significant effects found at α=0.05 level
 
 ### Clinical Impact
-- **15% relative reduction** in readmission risk for middle-aged patients (50-70 years)
-- **No significant population-level effect**, highlighting the importance of personalized testing strategies
-- **87% accuracy** in propensity score estimation with well-calibrated predictions
+- **No significant population-level effect** detected across all machine learning methods
+- **Heterogeneous effects observed by age group**:
+  - Pediatric patients: -2.42% effect (p=0.184)
+  - Young adults: -1.48% effect (p=0.122)  
+  - Middle-aged patients: -0.26% effect (p=0.622)
+  - Elderly patients: +0.47% effect (p=0.561)
+- **Model performance**: Log-loss values ranging from 0.28-0.41, indicating adequate predictive accuracy
 
 ### Economic Implications
-- Potential **$2.3M annual savings** through targeted testing protocols
-- **85% cost reduction** for low-risk populations while maintaining care quality
+- **Limited evidence for cost savings** due to lack of statistically significant treatment effects
+- **Current analysis suggests** that universal HbA1c testing may not provide substantial readmission reduction benefits
+- **Further research needed** to identify optimal patient subgroups for targeted testing strategies
 
 ## Methodology
 
@@ -159,10 +165,12 @@ causal-hba1c-diabetes/
 ## Technical Details
 
 ### Data Preprocessing
-- **Sample Size**: 71,518 unique patients (101,766 encounters)
-- **Features**: 42 final features after preprocessing
+- **Sample Size**: 71,518 unique patients after duplicate removal
+- **Features**: 42 final features used in causal analysis (47 total after preprocessing)
 - **Missing Data**: Systematic handling of high-missingness variables (weight: 97%, payer code: 40%)
 - **ICD-9 Mapping**: Hierarchical grouping of 717 diagnosis codes into 20 clinical categories
+- **Treatment Rate**: 18.2% of patients received HbA1c testing
+- **Outcome Rate**: 8.8% of patients were readmitted within 30 days
 
 ### Causal Assumptions
 1. **Conditional Ignorability**: No unmeasured confounders given observed covariates
@@ -171,10 +179,10 @@ causal-hba1c-diabetes/
 4. **Consistency**: Well-defined treatment and potential outcomes
 
 ### Model Validation
-- **Cross-fitting**: 5-fold cross-validation to prevent overfitting
-- **Placebo Tests**: Gender as placebo treatment (coefficient: 0.001, p=0.7)
-- **Balance Checks**: Standardized mean differences < 0.1 for key covariates
-- **Sensitivity Analysis**: Robust across different model specifications
+- **Cross-fitting**: 3-fold cross-validation to prevent overfitting
+- **Model Performance**: Log-loss values between 0.28-0.41 across all methods
+- **Balance Checks**: 18 covariates with standardized mean differences > 0.1 identified
+- **Robustness**: Consistent null effects across multiple machine learning approaches
 
 ## Scientific Background
 
@@ -189,11 +197,11 @@ HbA1c (glycated hemoglobin) testing measures average blood glucose levels over 2
 The hemoglobin A1c test is a key diagnostic and monitoring tool in diabetes management. Levels above 7% indicate suboptimal glucose control and increased risk of complications. This study investigates whether routine A1c testing during hospitalization leads to better care coordination and reduced readmissions.
 
 ### Policy Implications
-Results suggest that **personalized testing strategies** based on patient characteristics may be more effective than universal testing policies. Healthcare systems should consider:
-- Age-stratified testing protocols
-- Risk-based resource allocation
-- Integration with existing care pathways
-- Cost-effectiveness of targeted interventions
+Results suggest **limited causal impact** of HbA1c testing on 30-day readmissions. Healthcare systems should consider:
+- **Current HbA1c testing practices** may not significantly reduce short-term readmissions
+- **Focus on other interventions** for readmission reduction may be more effective  
+- **Cost-benefit analysis** of routine HbA1c testing protocols needed
+- **Long-term outcomes** beyond 30-day readmissions should be evaluated
 
 ## Limitations
 
