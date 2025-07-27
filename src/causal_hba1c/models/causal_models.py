@@ -78,11 +78,20 @@ class CausalInferenceEngine:
             exclude_cols = []
         
         # Define columns to exclude from covariates
-        default_exclude = [treatment_col, outcome_col, 'A1Cresult_ord']
+        default_exclude = [treatment_col, outcome_col, 'A1Cresult_ord', 'age_group', 'treatment_intensity']
         all_exclude = default_exclude + exclude_cols
         
-        # Get covariate columns
-        x_cols = [col for col in df.columns if col not in all_exclude]
+        # Get covariate columns (only numeric ones)
+        x_cols = []
+        for col in df.columns:
+            if col not in all_exclude:
+                # Only include numeric columns
+                if df[col].dtype in ['int64', 'float64', 'bool']:
+                    x_cols.append(col)
+                # Convert boolean columns that are stored as object type
+                elif df[col].dtype == 'object' and set(df[col].unique()) <= {True, False, 0, 1}:
+                    df[col] = df[col].astype(int)
+                    x_cols.append(col)
         
         logger.info(f"Prepared data with {len(x_cols)} covariates, treatment: {treatment_col}, outcome: {outcome_col}")
         
@@ -105,8 +114,8 @@ class CausalInferenceEngine:
                 'ml_m': RandomForestClassifier(random_state=self.random_state)
             },
             'decision_tree': {
-                'ml_g': DecisionTreeClassifier(random_state=self.random_state),
-                'ml_m': DecisionTreeClassifier(random_state=self.random_state)
+                'ml_g': DecisionTreeClassifier(random_state=self.random_state, min_samples_leaf=20),
+                'ml_m': DecisionTreeClassifier(random_state=self.random_state, min_samples_leaf=20)
             },
             'xgboost': {
                 'ml_g': XGBClassifier(random_state=self.random_state, objective="binary:logistic", 
@@ -215,12 +224,15 @@ class CausalInferenceEngine:
             # Extract results
             summary = dml_model.summary
             
+            # Get the first row (treatment effect)
+            first_row = summary.iloc[0]
+            
             estimates[method] = CausalEstimate(
-                coefficient=summary.loc[0, 'coef'],
-                std_error=summary.loc[0, 'std err'],
-                ci_lower=summary.loc[0, '2.5 %'],
-                ci_upper=summary.loc[0, '97.5 %'],
-                p_value=summary.loc[0, 'P>|t|'],
+                coefficient=first_row['coef'],
+                std_error=first_row['std err'],
+                ci_lower=first_row['2.5 %'],
+                ci_upper=first_row['97.5 %'],
+                p_value=first_row['P>|t|'],
                 method=method
             )
             
@@ -295,12 +307,15 @@ class CausalInferenceEngine:
         dml_model.fit()
         summary = dml_model.summary
         
+        # Get the first row (treatment effect)
+        first_row = summary.iloc[0]
+        
         return CausalEstimate(
-            coefficient=summary.loc[0, 'coef'],
-            std_error=summary.loc[0, 'std err'],
-            ci_lower=summary.loc[0, '2.5 %'],
-            ci_upper=summary.loc[0, '97.5 %'],
-            p_value=summary.loc[0, 'P>|t|'],
+            coefficient=first_row['coef'],
+            std_error=first_row['std err'],
+            ci_lower=first_row['2.5 %'],
+            ci_upper=first_row['97.5 %'],
+            p_value=first_row['P>|t|'],
             method='placebo_test'
         )
     
